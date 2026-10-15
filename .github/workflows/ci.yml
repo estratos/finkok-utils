@@ -2,46 +2,68 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
+  composer:
+    name: Validar composer.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: composer validate
+        run: composer validate --strict --no-check-publish
+
   tests:
-    name: "PHP ${{ matrix.php }} / Symfony ${{ matrix.symfony }}"
+    name: PHP ${{ matrix.php }} / ${{ matrix.dependencies }}
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3', '8.4']
-        symfony: ['^7.4']
+        php: [ '8.2', '8.3', '8.4' ]
+        dependencies: [ 'recientes' ]
         include:
           - php: '8.2'
-            symfony: '7.4.*'
+            dependencies: 'minimas'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup PHP
+      - name: Configurar PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, libxml, mbstring
+          # Deliberadamente NO se instala ext-soap: el bundle no debe depender de
+          # ella. El paso siguiente lo verifica antes de ejecutar la suite.
+          extensions: dom, libxml
           coverage: none
-          tools: composer:v2
 
-      - name: Install dependencies
+      - name: Verificar que ext-soap no esté disponible
         run: |
-          composer require --no-update --no-interaction \
-            "symfony/config:${{ matrix.symfony }}" \
-            "symfony/dependency-injection:${{ matrix.symfony }}" \
-            "symfony/http-client:${{ matrix.symfony }}" \
-            "symfony/http-kernel:${{ matrix.symfony }}"
-          composer update --no-interaction --prefer-dist --no-progress
+          php -r 'if (extension_loaded("soap")) { fwrite(STDERR, "ext-soap presente: la premisa del bundle no se está probando\n"); exit(1); } echo "ext-soap ausente: correcto\n";'
 
-      - name: Lint sources
+      # El repositorio no versiona composer.lock (es una librería), por lo que se
+      # resuelven las dependencias en cada ejecución.
+      - name: Instalar dependencias
+        run: >-
+          composer update --no-interaction --no-progress
+          ${{ matrix.dependencies == 'minimas' && '--prefer-lowest' || '' }}
+
+      - name: Revisar sintaxis
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
 
-      - name: Run test suite
-        run: composer test
+      # La suite no hace llamadas de red: los tests del grupo "live" quedan
+      # excluidos por phpunit.xml.dist y se ejecutan solo en local.
+      - name: Ejecutar la suite
+        run: vendor/bin/phpunit

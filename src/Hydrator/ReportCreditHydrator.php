@@ -11,20 +11,24 @@ use Estratos\FinkokUtilsBundle\Xml\DomReader;
 /**
  * Construye un {@see ReportCreditResult} desde el resultado de `report_credit`.
  *
- * Forma declarada por el WSDL:
+ * Forma declarada por el WSDL, y confirmada por el ejemplo oficial de Finkok:
  *
  * ```xml
- * <report_creditResult>
- *   <result>
- *     <ReportTotalCredit>
- *       <taxpayer_id>EKU9003173C9</taxpayer_id>
- *       <credit>100</credit>
- *       <date>2019-01-13T14:15:16.171819</date>
- *     </ReportTotalCredit>
- *   </result>
- *   <error>…</error>
- * </report_creditResult>
+ * <tns:report_creditResult>
+ *   <s0:result>
+ *     <s0:ReportTotalCredit>
+ *       <s0:credit>3</s0:credit>
+ *       <s0:date>2024-08-26T17:43:50.739288</s0:date>
+ *     </s0:ReportTotalCredit>
+ *   </s0:result>
+ * </tns:report_creditResult>
  * ```
+ *
+ * El hidratador distingue la **presencia** del contenedor `result`, porque es la
+ * única señal de que la cuenta es ilimitada:
+ *
+ *  - `<result/>` presente y vacío → cuenta de prepago sin movimientos;
+ *  - `result` ausente → cuenta ilimitada.
  *
  * La fecha puede traer **seis** decimales de fracción de segundo; el modelo la
  * conserva como texto y la interpreta de forma tolerante en
@@ -39,8 +43,15 @@ final class ReportCreditHydrator
     public static function hydrate(?\DOMElement $result, ?string $rawResponse = null): ReportCreditResult
     {
         if (null === $result) {
-            return new ReportCreditResult([], null, $rawResponse);
+            // Sin elemento de resultado no hay señal alguna sobre el tipo de cuenta.
+            return new ReportCreditResult([], null, $rawResponse, null);
         }
+
+        $container = DomReader::firstElement($result, 'result');
+
+        // La ausencia del nodo `result` significa cuenta ilimitada. Cuando el nodo
+        // existe —aunque venga sin hijos— la cuenta es de prepago.
+        $unlimited = null === $container;
 
         $items = [];
 
@@ -56,6 +67,7 @@ final class ReportCreditHydrator
             items: $items,
             error: DomReader::textOf($result, 'error'),
             rawResponse: $rawResponse,
+            unlimited: $unlimited,
         );
     }
 

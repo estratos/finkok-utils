@@ -53,7 +53,7 @@ final class Configuration implements ConfigurationInterface
                             ->info('Escribe el envelope completo en el log. No lo actives en producción: contiene RFC, montos y, en get_xml, el CFDI completo.')
                         ->end()
                         ->scalarNode('user_agent')
-                            ->defaultValue('finkok-utils-bundle/1.0')
+                            ->defaultValue('finkok-utils/1.0')
                         ->end()
                         ->arrayNode('retry')
                             ->addDefaultsIfNotSet()
@@ -84,6 +84,33 @@ final class Configuration implements ConfigurationInterface
                         'Intentos de get_xml cuando Finkok responde la ruta de un archivo en lugar del contenido. '
                         .'Ocurre con comprobantes fuera de la ventana de 3 meses.',
                     )
+                ->end()
+                ->arrayNode('psr18')
+                    ->info(
+                        'Transporte PSR-18. Por omisión se usa Symfony HttpClient, que sí garantiza timeout; '
+                        .'PSR-18 delega el timeout en el cliente.',
+                    )
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('enabled')
+                            ->defaultFalse()
+                            ->info('Envía el envelope SOAP con un cliente PSR-18 en lugar de Symfony HttpClient.')
+                        ->end()
+                        ->scalarNode('client')
+                            ->defaultNull()
+                            ->info(
+                                'Id del servicio que implementa Psr\Http\Client\ClientInterface. '
+                                .'Si se omite, se busca uno por tipo en el contenedor.',
+                            )
+                        ->end()
+                        ->scalarNode('request_factory')
+                            ->defaultNull()
+                            ->info(
+                                'Id del servicio que implementa Psr\Http\Message\RequestFactoryInterface (PSR-17). '
+                                .'Es obligatorio con PSR-18: PSR-18 solo sabe enviar, no construir peticiones.',
+                            )
+                        ->end()
+                    ->end()
                 ->end()
             ->end();
 

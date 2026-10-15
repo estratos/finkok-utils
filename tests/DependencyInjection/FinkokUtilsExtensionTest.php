@@ -82,7 +82,7 @@ final class FinkokUtilsExtensionTest extends TestCase
         $children = array_keys((new Configuration())->getConfigTreeBuilder()->buildTree()->getChildren());
         sort($children);
 
-        self::assertSame(['endpoints', 'http', 'xml_max_attempts'], $children);
+        self::assertSame(['endpoints', 'http', 'psr18', 'xml_max_attempts'], $children);
         self::assertNotContains('profiles', $children);
         self::assertNotContains('username', $children);
         self::assertNotContains('password', $children);

@@ -25,7 +25,7 @@ final class HydratorTest extends TestCase
         self::assertTrue($datetime->isSuccess());
 
         $idccp = ScalarResultHydrator::idCcp(Fixtures::resultElement('get-idccp-success.xml', 'get_idccp'));
-        self::assertSame('CCEafccdd-e9d4-6bd2-a2fc-1b2e4727d1e5', $idccp->idccp());
+        self::assertSame('CCC47D35-5855-4E23-8A52-3AB33221AE09', $idccp->idccp());
 
         $moneda = ScalarResultHydrator::moneda(Fixtures::resultElement('get-moneda-usd-success.xml', 'get_moneda_usd'));
         self::assertSame(17.1234, $moneda->rate());

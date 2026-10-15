@@ -1,0 +1,19 @@
+# Normaliza los finales de línea a LF dentro del repositorio, sin depender de la
+# configuración de core.autocrlf de cada equipo (en Windows suele estar en true).
+# El código PHP sigue PSR-12, que exige LF.
+* text=auto eol=lf
+
+# Los XML de prueba reproducen respuestas de Finkok y se leen tal cual en las
+# pruebas: no deben sufrir conversión de finales de línea.
+/tests/Fixtures/** -text
+
+# Archivos que NO forman parte del paquete distribuido por Packagist:
+# `composer require` descarga el zip sin ellos, de modo que la instalación queda
+# mínima y el código de producción no se mezcla con el de desarrollo.
+/.editorconfig    export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+/.github          export-ignore
+/docs             export-ignore
+/phpunit.xml.dist export-ignore
+/tests            export-ignore

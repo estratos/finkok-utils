@@ -4,8 +4,8 @@ Bundle de **Symfony 7.4** que adapta el **Web Service de utilerías de Finkok**
 (`utilities.wsdl`): fecha y hora del servidor, descarga de CFDI timbrados y
 reportes de créditos, totales y UUID.
 
-No depende de `ext-soap`: construye el envelope SOAP 1.1 a mano y lo envía con
-Symfony HttpClient.
+No depende de `ext-soap`: construye el envelope SOAP 1.1 a mano a partir del WSDL
+real y lo envía con Symfony HttpClient **o con cualquier cliente PSR-18**.
 
 | Web Service | Demo | Productivo |
 |---|---|---|
@@ -35,11 +35,21 @@ argumentos que el propio contrato define.
 
 - PHP 8.2 o superior (`ext-dom`, `ext-libxml`)
 - Symfony 7.4
+- **No requiere `ext-soap`**
+
+Depende de las interfaces PSR (`psr/http-client`, `psr/http-factory`,
+`psr/http-message`) y de `estratos/finkok-bundle`, que aporta el contrato compartido
+de credenciales (`CredentialsInterface`, `CredentialsProviderInterface`) y los
+valores de ambiente, para que ambos bundles sean interoperables.
+
+Si usas el transporte PSR-18 necesitas además una implementación PSR-7/PSR-17
+(por ejemplo `nyholm/psr7` o `guzzlehttp/psr7`); con el transporte por omisión no
+hace falta ninguna.
 
 ## Instalación
 
 ```bash
-composer require estratos/finkok-utils-bundle
+composer require estratos/finkok-utils
 ```
 
 Registra el bundle en `config/bundles.php`:
@@ -139,6 +149,71 @@ finkok_utils:
             enabled: true     # seguro: todas las utilerías son de solo lectura
             max_retries: 2
     xml_max_attempts: 3       # reintentos de get_xml cuando Finkok devuelve una ruta
+    psr18:
+        enabled: false        # true para enviar con un cliente PSR-18
+        client: null          # id del servicio PSR-18; null = autodetectar
+        request_factory: null # id del servicio PSR-17; obligatorio con PSR-18
+```
+
+### 3. Transporte: Symfony HttpClient o PSR-18
+
+El bundle **no usa `ext-soap`**: escribe el envelope SOAP 1.1 a mano a partir del
+WSDL real y lo envía por POST con `Content-Type: text/xml` y la cabecera
+`SOAPAction`. El envío concreto es intercambiable.
+
+**Por omisión usa Symfony HttpClient** (`symfony/http-client`), que es el que
+garantiza timeout y política de reintentos. Si prefieres tu propio cliente
+**PSR-18** (Guzzle, `php-http`, o `symfony/http-client` mediante un adaptador),
+actívalo así:
+
+```yaml
+# config/services.yaml
+services:
+    app.psr18.client:
+        class: GuzzleHttp\Client
+        arguments:
+            - timeout: 30.0
+              connect_timeout: 10.0
+
+    app.psr17.factory:
+        class: Nyholm\Psr7\Factory\Psr17Factory
+```
+
+```yaml
+# config/packages/finkok_utils.yaml
+finkok_utils:
+    psr18:
+        enabled: true
+        client: app.psr18.client
+        request_factory: app.psr17.factory
+```
+
+Con `enabled: true` puedes omitir los ids y el bundle los autodetecta por tipo
+(`Psr\Http\Client\ClientInterface` y `Psr\Http\Message\RequestFactoryInterface`).
+
+**PSR-17 es obligatorio con PSR-18**: PSR-18 solo sabe *enviar* peticiones, no
+construirlas, así que hace falta una fábrica de peticiones. Si activas PSR-18 sin
+fábrica, el bundle lo detecta y **se queda con Symfony HttpClient** en lugar de
+romper la compilación del contenedor.
+
+> **Sobre los timeouts:** PSR-18 no contempla timeouts, los configura el cliente.
+> Por eso el transporte PSR-18 ignora la opción `finkok_utils.http.timeout` y
+> tampoco aplica la política de reintentos. Si necesitas ambas cosas, usa el
+> transporte por omisión o configura el timeout en tu cliente PSR-18.
+
+Puedes ajustar el transporte por completo implementando `RequestHandlerInterface`:
+
+```php
+use Estratos\FinkokUtilsBundle\Soap\Http\RequestHandlerInterface;
+use Estratos\FinkokUtilsBundle\Soap\Http\HttpResponse;
+
+final class MiHandler implements RequestHandlerInterface
+{
+    public function post(string $url, string $body, array $headers, float $timeout): HttpResponse
+    {
+        // … tu propio envío; devuelve el estado, el cuerpo y las cabeceras.
+    }
+}
 ```
 
 ## Uso
@@ -282,12 +357,15 @@ $item->dateTime('America/Mexico_City'); // ?DateTimeImmutable
 | Id | Interfaz autowireable | Descripción |
 |---|---|---|
 | `finkok_utils.utilities_service` | `UtilitiesServiceInterface` | Adaptador de utilerías |
-| `finkok_utils.transport` | `SoapTransportInterface` | Transporte SOAP |
+| `finkok_utils.transport` | `SoapTransportInterface` | Transporte SOAP sobre Symfony HttpClient |
+| `finkok_utils.psr18_transport` | — | Transporte SOAP sobre PSR-18 (si está activado) |
 | `finkok_utils.endpoint_resolver` | — | Resolución de endpoints |
 | `finkok_utils.credentials_provider` | `CredentialsProviderInterface` | Perfiles |
 
-Las interfaces están marcadas como públicas, así que puedes decorarlas o
-sustituirlas sin tocar los identificadores internos.
+El servicio de utilerías recibe el transporte **por interfaz**, de modo que
+`SoapTransportInterface` es el único punto donde se decide cuál se usa. Las
+interfaces están marcadas como públicas, así que puedes decorarlas o sustituirlas
+sin tocar los identificadores internos.
 
 ## Pruebas
 
@@ -295,6 +373,10 @@ sustituirlas sin tocar los identificadores internos.
 composer test          # suite unitaria (sin red)
 composer test:live     # contrato contra el demo real de Finkok
 ```
+
+Las pruebas unitarias **no tocan la red**: usan fixtures con respuestas SOAP reales
+de Finkok y un cliente PSR-18 simulado, así que se ejecutan sin credenciales y sin
+`ext-soap`.
 
 Las pruebas live requieren credenciales:
 
@@ -307,8 +389,13 @@ composer test:live
 
 ## Documentación adicional
 
-- [`docs/wsdl.md`](docs/wsdl.md) — contrato extraído de `utilities.wsdl`
-- [`docs/errores.md`](docs/errores.md) — diagnóstico de fallos frecuentes
+Los documentos de referencia no se incluyen en el paquete de Composer (para que la
+instalación sea mínima); están en el repositorio:
+
+- [`docs/wsdl.md`](https://github.com/estratos/finkok-utils/blob/main/docs/wsdl.md)
+  — contrato completo extraído de `utilities.wsdl`
+- [`docs/errores.md`](https://github.com/estratos/finkok-utils/blob/main/docs/errores.md)
+  — diagnóstico de fallos frecuentes
 
 ## Licencia
 

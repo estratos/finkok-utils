@@ -11,6 +11,14 @@ proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 - Adaptador del Web Service de utilerías de Finkok (`utilities.wsdl`) para
   Symfony 7.4, sin dependencia de `ext-soap`.
+- **Transporte SOAP desacoplado**: el envelope se construye a mano una sola vez y el
+  envío es intercambiable mediante `RequestHandlerInterface`.
+  - `SymfonyRequestHandler` sobre Symfony HttpClient (por omisión; garantiza timeout
+    y política de reintentos).
+  - `Psr18RequestHandler` sobre cualquier cliente **PSR-18** (Guzzle, php-http, …),
+    con fábrica **PSR-17** obligatoria y configuración explícita
+    (`finkok_utils.psr18`). PSR-18 no contempla timeouts, así que no se activa solo.
+  - `Psr7Stream` propio, para no obligar a instalar una implementación PSR-7 concreta.
 - Operaciones implementadas, con los argumentos y el orden declarados en el WSDL:
   - `datetime` → `UtilitiesServiceInterface::datetime()`
   - `get_xml` → `UtilitiesServiceInterface::downloadXml()`
@@ -19,6 +27,11 @@ proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   - `report_uuid` → `UtilitiesServiceInterface::reportUuid()`
   - `get_idccp` → `UtilitiesServiceInterface::getIdCcp()`
   - `get_moneda_usd` → `UtilitiesServiceInterface::getMonedaUsd()`
+- `IdCcp`: validación y generación del identificador del complemento Carta Porte 3.0
+  (36 caracteres, prefijo `CCC` más cuatro grupos hexadecimales, forma RFC 4122), y
+  `IdCcpResult::isValid()` / `normalized()` para verificar lo que devuelve el PAC.
+- `ReportCreditResult::isUnlimited()`: distingue una cuenta **ilimitada** (respuesta
+  sin el nodo `result`) de una cuenta de prepago sin movimientos en el periodo.
 - DTOs de resultado: `DateTimeResult`, `DownloadXmlResult`, `IdCcpResult`,
   `MonedaResult`, `ReportCreditResult`, `ReportTotalResult`, `ReportUuidResult`.
 - Value object `DateRange` con constructores para día, mes, año, rango de periodos

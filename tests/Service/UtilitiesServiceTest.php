@@ -362,7 +362,8 @@ final class UtilitiesServiceTest extends TestCase
         $result = $service->getIdCcp();
 
         self::assertTrue($result->isSuccess());
-        self::assertSame('CCEafccdd-e9d4-6bd2-a2fc-1b2e4727d1e5', $result->idccp());
+        self::assertSame('CCC47D35-5855-4E23-8A52-3AB33221AE09', $result->idccp());
+        self::assertTrue($result->isValid());
         self::assertSame('get_idccp', $transport->lastRequest()->operation);
         self::assertSame(['username', 'password'], array_keys($transport->lastArguments()));
     }
