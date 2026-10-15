@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:s0="apps.services.soap.core.views" xmlns:tns="http://facturacion.finkok.com/utilities">
+  <soap:Body>
+    <tns:report_creditResponse>
+      <tns:report_creditResult>
+        <s0:result>
+          <s0:ReportTotalCredit>
+            <s0:taxpayer_id>EKU9003173C9</s0:taxpayer_id>
+            <s0:credit>100</s0:credit>
+            <s0:date>2019-01-13T14:15:16.171819</s0:date>
+          </s0:ReportTotalCredit>
+          <s0:ReportTotalCredit>
+            <s0:taxpayer_id>EKU9003173C9</s0:taxpayer_id>
+            <s0:credit>200</s0:credit>
+            <s0:date>2019-01-15T16:17:18.192021</s0:date>
+          </s0:ReportTotalCredit>
+        </s0:result>
+        <s0:error xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+      </tns:report_creditResult>
+    </tns:report_creditResponse>
+  </soap:Body>
+</soap:Envelope>

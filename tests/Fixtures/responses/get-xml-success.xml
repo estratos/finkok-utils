@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:s0="apps.services.soap.core.views" xmlns:tns="http://facturacion.finkok.com/utilities">
+  <soap:Body>
+    <tns:get_xmlResponse>
+      <tns:get_xmlResult>
+        <s0:xml>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Total="1160.00"&gt;&lt;cfdi:Emisor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE"/&gt;&lt;cfdi:Receptor Rfc="URE180429TM6"/&gt;&lt;cfdi:Complemento&gt;&lt;tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="12345678-1234-1234-1234-000000000001" Total="1160.00"/&gt;&lt;/cfdi:Complemento&gt;&lt;/cfdi:Comprobante&gt;</s0:xml>
+        <s0:error xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+      </tns:get_xmlResult>
+    </tns:get_xmlResponse>
+  </soap:Body>
+</soap:Envelope>

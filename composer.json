@@ -1,0 +1,68 @@
+{
+    "name": "estratos/finkok-utils-bundle",
+    "description": "Bundle de Symfony 7.4 que adapta los Web Services SOAP de utilerías de Finkok (fecha/hora, descarga de XML, reportes de créditos, totales y UUID) sin depender de ext-soap.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "symfony-bundle",
+        "cfdi",
+        "sat",
+        "finkok",
+        "utilerias",
+        "utilities",
+        "reportes",
+        "facturacion",
+        "soap"
+    ],
+    "authors": [
+        {
+            "name": "Estratos Consulting",
+            "email": "julio@estratos.net",
+            "role": "Developer"
+        }
+    ],
+    "homepage": "https://github.com/estratos/finkok-utils-bundle",
+    "support": {
+        "issues": "https://github.com/estratos/finkok-utils-bundle/issues",
+        "source": "https://github.com/estratos/finkok-utils-bundle",
+        "docs": "https://github.com/estratos/finkok-utils-bundle#readme"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "psr/log": "^2.0 || ^3.0",
+        "symfony/config": "^7.4",
+        "symfony/dependency-injection": "^7.4",
+        "symfony/http-client": "^7.4",
+        "symfony/http-client-contracts": "^3.5",
+        "symfony/http-kernel": "^7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "symfony/var-dumper": "^7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Estratos\\FinkokUtilsBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Estratos\\FinkokUtilsBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:live": "phpunit --group live"
+    }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:s0="apps.services.soap.core.views" xmlns:tns="http://facturacion.finkok.com/utilities">
+  <soap:Body>
+    <tns:get_xmlResponse>
+      <tns:get_xmlResult>
+        <s0:xml xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+        <s0:error>No se encontró el XML solicitado</s0:error>
+      </tns:get_xmlResult>
+    </tns:get_xmlResponse>
+  </soap:Body>
+</soap:Envelope>

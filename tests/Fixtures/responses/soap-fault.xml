@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <soap:Fault>
+      <faultcode>soap:Client</faultcode>
+      <faultstring>El servicio no pudo procesar la solicitud: elemento inesperado</faultstring>
+      <detail>Operación inválida</detail>
+    </soap:Fault>
+  </soap:Body>
+</soap:Envelope>
